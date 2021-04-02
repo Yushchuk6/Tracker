@@ -68,19 +68,19 @@ def create_layout(fig, target, pos):
     app.layout = html.Div([
         html.Div([
             dcc.Graph(id="graph", figure=fig,
-                      style={'width': '80%', 'height': '90vh'}),
-            html.Div([
-                html.Div(children="hello 1"),
-                html.Div([
-                    dcc.Input(id="input1", type="text", placeholder="1"),
-                    dcc.Input(id="input2", type="text", placeholder="2"),
-                ], style={'display': 'flex', 'align-self': 'flex-start'}),
-                html.Div(children="hello 2"),
-                html.Div([
-                    dcc.Input(id="input4", type="text", placeholder="1"),
-                    dcc.Input(id="input5", type="text", placeholder="2"),
-                ]),
-            ], style={'flex-direction': 'column'})
+                      style={'width': '100%', 'height': '90vh'}),
+            # html.Div([
+            #     html.Div(children="hello 1"),
+            #     html.Div([
+            #         dcc.Input(id="input1", type="text", placeholder="1"),
+            #         dcc.Input(id="input2", type="text", placeholder="2"),
+            #     ], style={'display': 'flex', 'align-self': 'flex-start'}),
+            #     html.Div(children="hello 2"),
+            #     html.Div([
+            #         dcc.Input(id="input4", type="text", placeholder="1"),
+            #         dcc.Input(id="input5", type="text", placeholder="2"),
+            #     ]),
+            # ], style={'flex-direction': 'column'})
         ], style={'display': 'flex'}),
         html.Button('Play', id='play', n_clicks=0),
         dcc.Slider(
@@ -140,7 +140,7 @@ def create_layout(fig, target, pos):
 
 
 if __name__ == '__main__':
-    df = pd.read_csv('test3.csv')
+    df = pd.read_csv('path.csv')
 
     target = Target(df.to_numpy())
 
