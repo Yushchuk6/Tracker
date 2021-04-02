@@ -11,8 +11,6 @@ from move_model.target import Target
 from tracking.tracker import Tracker
 from tracking.positioning import Positioning
 
-external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-
 
 def err_gen_norm():
     return np.random.normal(0, 1)
@@ -140,27 +138,16 @@ def create_layout(fig, target, pos):
 
 
 if __name__ == '__main__':
-    df = pd.read_csv('path.csv')
+    path_df = pd.read_csv('path.csv')
 
-    target = Target(df.to_numpy())
+    target = Target(path_df.to_numpy())
 
-    tracker_list = []
-    # test_medium
-    tracker_list.append(Tracker(err_gen_norm, 50.465, 30.46, 5))
-    tracker_list.append(Tracker(err_gen_norm, 50.445, 30.43, 20))
-    tracker_list.append(Tracker(err_gen_norm, 50.438, 30.48, 20))
-    # test_large
-    # tracker_list.append(Tracker(err_gen_norm, 50.48, 30.45, 5))
-    # tracker_list.append(Tracker(err_gen_norm, 50.43, 30.38, 20))
-    # tracker_list.append(Tracker(err_gen_norm, 50.42, 30.5, 20))
-    # test_small
-    # tracker_list.append(Tracker(err_gen_norm, 50.448, 30.448, 5))
-    # tracker_list.append(Tracker(err_gen_norm, 50.452, 30.458, 20))
-    # tracker_list.append(Tracker(err_gen_norm, 50.446, 30.46, 20))
+    trackers_df = pd.read_csv('trackers_small.csv')
+    tracker_list = list(map(lambda t: Tracker(err_gen_norm, t[0], t[1], t[2]), trackers_df.to_numpy()))
 
     p = Positioning(tracker_list)
 
-    fig = create_figure(df, p)
+    fig = create_figure(path_df, p)
     app = create_layout(fig, target, p)
 
     app.run_server(debug=True)
