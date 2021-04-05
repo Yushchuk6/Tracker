@@ -1,10 +1,11 @@
+import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
-import numpy as np
+from pykalman import KalmanFilter
 
 
 from move_model.target import Target
@@ -18,16 +19,22 @@ def err_gen_norm():
 
 def ewm(_list):
     period = 5
-
     df = pd.DataFrame(_list)
 
     avg = df.ewm(span=period, adjust=False).mean()
 
-    if len(_list) == period:
-        _list = np.delete(_list, 0)
-    
     return avg.values.tolist()[-1][0]
 
+
+def kalman(_list):
+    # if len(_list) <= 1:
+    #     _list.append(_list[0])
+
+    kf = KalmanFilter(initial_state_mean=0, n_dim_obs=2)
+
+    res, _ = kf.em(_list).smooth(_list)
+
+    return res[0][-1]
 
 
 def calc_center(lat_list, lon_list):
@@ -153,7 +160,7 @@ def create_layout(fig, target, pos):
 
 if __name__ == '__main__':
     path_df = pd.read_csv('path.csv')
-    # la, lo = ewm([50, 60, 70, 80, 90], [30, 40, 50, 60, 70])
+    # la = kalman([50, 60, 70, 80, 90])
     # print("lat: ", la)
     # print("lon: ", lo)
     target = Target(path_df.to_numpy())
@@ -162,7 +169,7 @@ if __name__ == '__main__':
     tracker_list = list(map(lambda t: Tracker(
         err_gen_norm, t[0], t[1], t[2]), trackers_df.to_numpy()))
 
-    p = Positioning(tracker_list, ewm)
+    p = Positioning(tracker_list, ewm, 5)
 
     fig = create_figure(path_df, p)
     app = create_layout(fig, target, p)
