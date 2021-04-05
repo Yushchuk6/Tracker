@@ -16,20 +16,17 @@ def err_gen_norm():
     return np.random.normal(0, 1)
 
 
-def ewm(lat_list, lon_list):
+def ewm(_list):
     period = 5
 
-    lat_df = pd.DataFrame(lat_list)
-    lon_df = pd.DataFrame(lon_list)
+    df = pd.DataFrame(_list)
 
-    avg_lat = lat_df.ewm(span=period, adjust=False).mean()
-    avg_lon = lon_df.ewm(span=period, adjust=False).mean()
+    avg = df.ewm(span=period, adjust=False).mean()
 
-    if len(lat_list) == period:
-        lat_list = np.delete(lat_list, 0)
-        lon_list = np.delete(lon_list, 0)
+    if len(_list) == period:
+        _list = np.delete(_list, 0)
     
-    return avg_lat.values.tolist()[-1][0], avg_lon.values.tolist()[-1][0]
+    return avg.values.tolist()[-1][0]
 
 
 

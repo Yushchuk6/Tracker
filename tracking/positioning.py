@@ -52,7 +52,8 @@ class Positioning:
         self.lat_list.append(lat)
         self.lon_list.append(lon)
 
-        lat, lon = self.filter(self.lat_list, self.lon_list)
+        lat = self.filter(self.lat_list)
+        lon = self.filter(self.lon_list)
         return LatLon(lat, lon)
 
     def guess_position(self, tracker1, tracker2, target):
