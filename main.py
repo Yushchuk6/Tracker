@@ -16,6 +16,23 @@ def err_gen_norm():
     return np.random.normal(0, 1)
 
 
+def ewm(lat_list, lon_list):
+    period = 5
+
+    lat_df = pd.DataFrame(lat_list)
+    lon_df = pd.DataFrame(lon_list)
+
+    avg_lat = lat_df.ewm(span=period, adjust=False).mean()
+    avg_lon = lon_df.ewm(span=period, adjust=False).mean()
+
+    if len(lat_list) == period:
+        lat_list = np.delete(lat_list, 0)
+        lon_list = np.delete(lon_list, 0)
+    
+    return avg_lat.values.tolist()[-1][0], avg_lon.values.tolist()[-1][0]
+
+
+
 def calc_center(lat_list, lon_list):
     lat = np.mean(lat_list)
     lon = np.mean(lon_list)
@@ -139,13 +156,16 @@ def create_layout(fig, target, pos):
 
 if __name__ == '__main__':
     path_df = pd.read_csv('path.csv')
-
+    # la, lo = ewm([50, 60, 70, 80, 90], [30, 40, 50, 60, 70])
+    # print("lat: ", la)
+    # print("lon: ", lo)
     target = Target(path_df.to_numpy())
 
-    trackers_df = pd.read_csv('trackers_small.csv')
-    tracker_list = list(map(lambda t: Tracker(err_gen_norm, t[0], t[1], t[2]), trackers_df.to_numpy()))
+    trackers_df = pd.read_csv('trackers_medium.csv')
+    tracker_list = list(map(lambda t: Tracker(
+        err_gen_norm, t[0], t[1], t[2]), trackers_df.to_numpy()))
 
-    p = Positioning(tracker_list)
+    p = Positioning(tracker_list, ewm)
 
     fig = create_figure(path_df, p)
     app = create_layout(fig, target, p)

@@ -3,10 +3,14 @@ from pygeodesy.sphericalNvector import triangulate, LatLon
 
 
 class Positioning:
-    def __init__(self, tracker_list):
+    def __init__(self, tracker_list, filter):
         self.tracker_list = tracker_list
         if len(tracker_list) > 2:
             self.tracker_list.append(tracker_list[0])
+        
+        self.filter = filter
+        self.lat_list = []
+        self.lon_list = []
 
     def get_lat_list(self):
         return list(map(lambda x: x.latlon.lat, self.tracker_list))
@@ -45,6 +49,10 @@ class Positioning:
         lat /= size
         lon /= size
 
+        self.lat_list.append(lat)
+        self.lon_list.append(lon)
+
+        lat, lon = self.filter(self.lat_list, self.lon_list)
         return LatLon(lat, lon)
 
     def guess_position(self, tracker1, tracker2, target):
