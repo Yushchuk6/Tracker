@@ -58,11 +58,12 @@ class Positioning:
         
         self._update_list(self.lat_list)
         self._update_list(self.lon_list)
+        
         return LatLon(lat, lon)
 
     def _update_list(self, _list):
-        while len(_list) >=  self.accuracy:
-            _list = np.delete(_list, 0)
+        while len(_list) >  self.accuracy:
+            del _list[0]
 
     def guess_position(self, tracker1, tracker2, target):
         a1 = tracker1.get_bearing(target)
