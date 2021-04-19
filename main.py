@@ -18,23 +18,18 @@ def err_gen_norm():
 
 
 def ewm(_list):
-    period = 5
     df = pd.DataFrame(_list)
 
-    avg = df.ewm(span=period, adjust=False).mean()
+    avg = df.ewm(span=len(_list), adjust=False).mean()
 
     return avg.values.tolist()[-1][0]
 
-
 def kalman(_list):
-    # if len(_list) <= 1:
-    #     _list.append(_list[0])
+    kf = KalmanFilter(initial_state_mean=_list[0])
 
-    kf = KalmanFilter(initial_state_mean=0, n_dim_obs=2)
+    res, _ = kf.em(_list, n_iter=2).smooth(_list)
 
-    res, _ = kf.em(_list).smooth(_list)
-
-    return res[0][-1]
+    return res[-1][0]
 
 
 def calc_center(lat_list, lon_list):
@@ -111,7 +106,7 @@ def create_layout(fig, target, pos):
         ),
         dcc.Interval(
             id='interval-component',
-            interval=100,
+            interval=130,
             n_intervals=0,
             disabled=True
         ),
@@ -169,7 +164,7 @@ if __name__ == '__main__':
     tracker_list = list(map(lambda t: Tracker(
         err_gen_norm, t[0], t[1], t[2]), trackers_df.to_numpy()))
 
-    p = Positioning(tracker_list, ewm, 5)
+    p = Positioning(tracker_list, kalman, 5)
 
     fig = create_figure(path_df, p)
     app = create_layout(fig, target, p)
