@@ -83,18 +83,6 @@ def create_layout(fig, target, pos):
         html.Div([
             dcc.Graph(id="graph", figure=fig,
                       style={'width': '100%', 'height': '90vh'}),
-            # html.Div([
-            #     html.Div(children="hello 1"),
-            #     html.Div([
-            #         dcc.Input(id="input1", type="text", placeholder="1"),
-            #         dcc.Input(id="input2", type="text", placeholder="2"),
-            #     ], style={'display': 'flex', 'align-self': 'flex-start'}),
-            #     html.Div(children="hello 2"),
-            #     html.Div([
-            #         dcc.Input(id="input4", type="text", placeholder="1"),
-            #         dcc.Input(id="input5", type="text", placeholder="2"),
-            #     ]),
-            # ], style={'flex-direction': 'column'})
         ], style={'display': 'flex'}),
         html.Button('Play', id='play', n_clicks=0),
         dcc.Slider(
@@ -106,7 +94,7 @@ def create_layout(fig, target, pos):
         ),
         dcc.Interval(
             id='interval-component',
-            interval=130,
+            interval=1000,
             n_intervals=0,
             disabled=True
         ),
@@ -142,29 +130,27 @@ def create_layout(fig, target, pos):
     @ app.callback(
         Output('my-slider', 'value'),
         Input('interval-component', 'n_intervals'),
+        State('interval-component', 'interval'),
         State('my-slider', 'value'),
         State('my-slider', 'step'),
         State('my-slider', 'max'))
-    def update_metrics(n, value, step, max):
+    def update_metrics(n, interval, value, step, max):
         if value >= max:
             return 0
-        return value + step*3
+        return value + interval/1000
 
     return app
 
 
 if __name__ == '__main__':
     path_df = pd.read_csv('path.csv')
-    # la = kalman([50, 60, 70, 80, 90])
-    # print("lat: ", la)
-    # print("lon: ", lo)
     target = Target(path_df.to_numpy())
 
     trackers_df = pd.read_csv('trackers_medium.csv')
     tracker_list = list(map(lambda t: Tracker(
         err_gen_norm, t[0], t[1], t[2]), trackers_df.to_numpy()))
 
-    p = Positioning(tracker_list, kalman, 5)
+    p = Positioning(tracker_list, ewm, 5)
 
     fig = create_figure(path_df, p)
     app = create_layout(fig, target, p)
