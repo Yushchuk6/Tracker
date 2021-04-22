@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="plot.js"></script>
+    <script src="websocket.js"></script>
+    <title>Tracker</title>
+</head>
+
+<body>
+    <div id="plot" style="width:100%;height:90vh;"></div>
+    <script>
+        const trace_path = {
+            type: 'scattermapbox',
+            mode: 'markers+lines',
+            name: 'path',
+            marker: {
+                color: 'blue',
+                size: 12,
+            }
+        };
+        const trace_trackers = {
+            type: 'scattermapbox',
+            mode: 'markers+lines',
+            name: 'trackers',
+            marker: {
+                color: 'red',
+                size: 15,
+            }
+        };
+        const trace_target = {
+            type: 'scattermapbox',
+            mode: 'markers',
+            name: 'target',
+            marker: {
+                color: 'green',
+                size: 15,
+            }
+        };
+        const trace_guess = {
+            type: 'scattermapbox',
+            mode: 'markers+lines',
+            name: 'guess_target',
+            marker: {
+                color: 'purple',
+                size: 15,
+            }
+        };
+
+        const plot_data = [trace_path, trace_trackers, trace_target, trace_guess];
+        const plot_layout = {
+            showlegend: true,
+            // uirevision: true,
+            margin: { l: 0, t: 0, b: 0, r: 0 },
+            mapbox: {
+                center: { 'lat': 2.5, 'lon': 6 },
+                style: 'open-street-map',  //white-bg
+                zoom: 5//14.5
+            }
+        }
+        const plot_config = { responsive: true }
+
+        plot = new Plot('plot', plot_data, plot_layout, plot_config);
+    </script>
+</body>
+
+</html>
