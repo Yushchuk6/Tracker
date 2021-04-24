@@ -6,11 +6,30 @@ socket.onopen = function (e) {
 
 socket.onmessage = function (event) {
     const command = JSON.parse(event.data);
+    const data = command.data
 
-    if (command.type === 'message'){
-        console.log(`[message]: ${command.message}`);
-    }
-    else if (command.type === 'trace'){
-        plot.update_trace(command.data);
+    switch (command.type){
+        case 'message':
+            console.log(`[message]: ${data}`);
+            break;
+        case 'trace':
+            plot.update_trace(data);
+            break;
+        case 'layout':
+            plot.update_layout(data);
+            break;
+        case 'slider':
+            const slider = document.getElementById('slider');
+            set_list_attributes(slider, data)
+            break;
+        case 'test':
+            console.log(`[test] test data: ${data}`);
+            break;
     }
 };
+
+function set_list_attributes(html_el, attr){
+    for (const [key, value] of Object.entries(attr)) {
+        html_el.setAttribute(key, value);
+    }
+}

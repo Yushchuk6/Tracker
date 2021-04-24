@@ -1,19 +1,6 @@
 
-
-
-// function test() {
-//     const res = {}
-//     res['name'] = 'path';
-//     res['lat'] = [1, 2, 3, 4];
-//     res['lon'] = [10, 4, 8, 2];
-
-//     update_trace('plot', res);
-// }
-
-
-
 class Plot {
-    constructor(id, data, layout, config){
+    constructor(id, data, layout, config) {
         this.id = id;
         this.data = data;
         this.layout = layout;
@@ -24,12 +11,21 @@ class Plot {
 
     update_trace(update) {
         const trace = this.data.find(e => e.name === update.name);
-    
-        for (const [key, value] of Object.entries(update)) {
-            trace[key] = value
-        }
-    
+
+        this._add_to_dict(trace, update)
+
         Plotly.redraw(this.id);
         console.log(`[update] trace \'${update.name}\' updated`);
+    }
+
+    update_layout(update) {
+        Plotly.relayout(this.id, update)
+        console.log(`[update] layout updated`);
+    }
+
+    _add_to_dict(origin, update) {
+        for (const [key, value] of Object.entries(update)) {
+            origin[key] = value
+        }
     }
 }
