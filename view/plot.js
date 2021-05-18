@@ -21,6 +21,7 @@ class Plot {
     update_layout(update) {
         Plotly.relayout(this.id, update)
         console.log(`[update] layout updated`);
+        console.log(Plotly);
     }
 
     _add_to_dict(origin, update) {

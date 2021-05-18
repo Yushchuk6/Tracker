@@ -7,7 +7,7 @@ socket.onopen = function (e) {
 socket.onmessage = function (event) {
     const command = JSON.parse(event.data);
     const data = command.data
-
+    console.log(data)
     switch (command.type){
         case 'message':
             console.log(`[message]: ${data}`);
@@ -27,6 +27,10 @@ socket.onmessage = function (event) {
             break;
     }
 };
+
+function send_socket(message){
+    socket.send(message)
+}
 
 function set_list_attributes(html_el, attr){
     for (const [key, value] of Object.entries(attr)) {
