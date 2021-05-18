@@ -20,6 +20,19 @@ async def inf_wrap(websocket, func, interval):
         await asyncio.sleep(interval)
 
 
+async def consumer_handler(websocket, path):
+    async for message in websocket:
+        message = json.loads(message)
+
+        if message['type'] == 'target':
+            message = controller.get_target()
+        elif message['type'] == 'guess':
+            message = controller.get_target_guess()
+        
+        await websocket.send(message)
+        
+
+
 async def producer_handler(websocket, path):
     message = controller.get_path_json()
     await websocket.send(message)
@@ -37,13 +50,24 @@ async def producer_handler(websocket, path):
     # }
     # await websocket.send(json.dumps(message))
 
-    asyncio.create_task(inf_wrap(websocket, controller.get_target, 0.2))
-    asyncio.create_task(inf_wrap(websocket, controller.get_target_guess, 1))
+    # asyncio.create_task(inf_wrap(websocket, controller.get_target, 0.2))
+    # asyncio.create_task(inf_wrap(websocket, controller.get_target_guess, 1))
 
-    pending = asyncio.all_tasks()
-    await asyncio.gather(*pending)
+    # pending = asyncio.all_tasks()
+    # await asyncio.gather(*pending)
 
 
-start_server = websockets.serve(producer_handler, 'localhost', 8080)
+async def handler(websocket, path):
+    consumer_task = asyncio.ensure_future(
+        consumer_handler(websocket, path))
+    producer_task = asyncio.ensure_future(
+        producer_handler(websocket, path))
+    done, pending = await asyncio.wait(
+        [consumer_task, producer_task]
+    )
+    # for task in pending:
+    #     task.cancel()
+
+start_server = websockets.serve(handler, 'localhost', 8080)
 loop.run_until_complete(start_server)
 loop.run_forever()

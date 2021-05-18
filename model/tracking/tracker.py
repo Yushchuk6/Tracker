@@ -9,4 +9,5 @@ class Tracker:
 
     def get_bearing(self, latlon):
         b = self.latlon.initialBearingTo(latlon)
+        #b = (b - 180) % 360
         return b + self.error_gen()

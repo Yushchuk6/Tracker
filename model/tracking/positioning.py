@@ -20,6 +20,7 @@ class Positioning:
         return list(map(lambda x: x.latlon.lon, self.tracker_list))
 
     def triangulate(self, ll1, b1, ll2, b2):
+        #return triangulate(ll1, b1, ll2, b2)
         main_ll, main_b, sub_ll, sub_b = self._sort_main_sub(ll1, b1, ll2, b2)
 
         bearing = main_ll.initialBearingTo(sub_ll)
