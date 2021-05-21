@@ -1,4 +1,3 @@
-import numpy as np
 from pygeodesy.sphericalNvector import triangulate, LatLon
 
 
@@ -7,7 +6,7 @@ class Positioning:
         self.tracker_list = tracker_list
         if len(tracker_list) > 2:
             self.tracker_list.append(tracker_list[0])
-        
+
         self.filter = filter
         self.accuracy = accuracy
         self.lat_list = []
@@ -19,24 +18,15 @@ class Positioning:
     def get_lon_list(self):
         return list(map(lambda x: x.latlon.lon, self.tracker_list))
 
-    def triangulate(self, ll1, b1, ll2, b2):
-        #return triangulate(ll1, b1, ll2, b2)
-        main_ll, main_b, sub_ll, sub_b = self._sort_main_sub(ll1, b1, ll2, b2)
-
-        bearing = main_ll.initialBearingTo(sub_ll)
-
-        if (main_b - bearing) >= 0 and (main_b - bearing) < 180:
-            return triangulate(sub_ll, sub_b, main_ll, main_b)
-        else:
-            return triangulate(main_ll, main_b, sub_ll, sub_b)
-
-    def _sort_main_sub(self, ll1, b1, ll2, b2):
-        if ll1.lon - ll2.lon >= 0:
-            return ll2, b2, ll1, b1
-        else:
-            return ll1, b1, ll2, b2
-
     def guess_target(self, target):
+        self.add_target_pos(target)
+
+        lat = self.filter(self.lat_list)
+        lon = self.filter(self.lon_list)
+
+        return LatLon(lat, lon)
+
+    def add_target_pos(self, target):
         size = len(self.tracker_list) - 1
         lat, lon = 0, 0
 
@@ -54,16 +44,11 @@ class Positioning:
         self.lat_list.append(lat)
         self.lon_list.append(lon)
 
-        lat = self.filter(self.lat_list)
-        lon = self.filter(self.lon_list)
-        
         self._update_list(self.lat_list)
         self._update_list(self.lon_list)
-        
-        return LatLon(lat, lon)
 
     def _update_list(self, _list):
-        while len(_list) >  self.accuracy:
+        while len(_list) > self.accuracy:
             del _list[0]
 
     def guess_position(self, tracker1, tracker2, target):
@@ -72,3 +57,19 @@ class Positioning:
 
         return self.triangulate(tracker1.latlon, a1,
                                 tracker2.latlon, a2)
+
+    def triangulate(self, ll1, b1, ll2, b2):
+        main_ll, main_b, sub_ll, sub_b = self._sort_main_sub(ll1, b1, ll2, b2)
+
+        bearing = main_ll.initialBearingTo(sub_ll)
+
+        if (main_b - bearing) >= 0 and (main_b - bearing) < 180:
+            return triangulate(sub_ll, sub_b, main_ll, main_b)
+        else:
+            return triangulate(main_ll, main_b, sub_ll, sub_b)
+
+    def _sort_main_sub(self, ll1, b1, ll2, b2):
+        if ll1.lon - ll2.lon >= 0:
+            return ll2, b2, ll1, b1
+        else:
+            return ll1, b1, ll2, b2

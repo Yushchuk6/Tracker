@@ -3,52 +3,42 @@ import json
 import websockets
 import pandas as pd
 
-from main import err_gen_norm, ewm, SimTragetController
-
-loop = asyncio.get_event_loop()
-
-path_df = pd.read_csv('path.csv')
-trackers_df = pd.read_csv('trackers_medium.csv')
-
-controller = SimTragetController(path_df, trackers_df, err_gen_norm, ewm)
+from controller.controller import SimulatorController
+from model.simulator import Simulator, err_gen_norm
+from model.filters.ewma import ewm
+from model.filters.kalmam import kalman
 
 
-async def inf_wrap(websocket, func, interval):
-    while True:
-        message = func()
-        await websocket.send(message)
-        await asyncio.sleep(interval)
+# async def inf_wrap(websocket, func, interval):
+#     while True:
+#         message = func()
+#         await websocket.send(message)
+#         await asyncio.sleep(interval)
 
 
 async def consumer_handler(websocket, path):
+    print('aaaa')
     async for message in websocket:
         message = json.loads(message)
+        _type = message['type']
+        _data = message['data']
 
-        if message['type'] == 'target':
-            message = controller.get_target()
-        elif message['type'] == 'guess':
-            message = controller.get_target_guess()
-        
+        if _type == 'target':
+            message = controller.get_target_json(_data['time'])
+        elif _type == 'guess':
+            message = controller.get_target_guess_json(_data['time'])
+
         await websocket.send(message)
-        
 
 
 async def producer_handler(websocket, path):
+    
     message = controller.get_path_json()
     await websocket.send(message)
-
-    message = controller.get_path_center_json()
+    
+    message = controller.get_trackers_json()
+    print(message)
     await websocket.send(message)
-
-    # message = {
-    #     'type': 'slider',
-    #     'data': {
-    #         'min': 0,
-    #         'max': 69,
-    #         'step': 0.1,
-    #     }
-    # }
-    # await websocket.send(json.dumps(message))
 
     # asyncio.create_task(inf_wrap(websocket, controller.get_target, 0.2))
     # asyncio.create_task(inf_wrap(websocket, controller.get_target_guess, 1))
@@ -58,16 +48,23 @@ async def producer_handler(websocket, path):
 
 
 async def handler(websocket, path):
+    print('aaaa')
     consumer_task = asyncio.ensure_future(
         consumer_handler(websocket, path))
     producer_task = asyncio.ensure_future(
         producer_handler(websocket, path))
-    done, pending = await asyncio.wait(
-        [consumer_task, producer_task]
-    )
-    # for task in pending:
-    #     task.cancel()
 
-start_server = websockets.serve(handler, 'localhost', 8080)
-loop.run_until_complete(start_server)
-loop.run_forever()
+    await asyncio.wait([consumer_task, producer_task])
+
+if __name__ == '__main__':
+    path_df = pd.read_csv('model\\data\\path.csv')
+    trackers_df = pd.read_csv('model\\data\\trackers_medium.csv')
+
+    model = Simulator(path_df, trackers_df, err_gen_norm, kalman)
+    controller = SimulatorController(model)
+
+    loop = asyncio.get_event_loop()
+
+    start_server = websockets.serve(handler, 'localhost', 8080)
+    loop.run_until_complete(start_server)
+    loop.run_forever()
