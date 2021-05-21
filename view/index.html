@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
         integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
         crossorigin=""></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
     <script src="plot.js"></script>
     <script src="websocket.js"></script>
     <title>Tracker</title>
@@ -19,7 +19,17 @@
 
         #mapid {
             width: 100%;
-            height: 95vh;
+            height: 100vh;
+        }
+
+        #gui {
+            position: absolute;
+            z-index: 1000;
+            right: 0px;
+        }
+
+        .dg.main {
+            margin: 0;
         }
 
         section {
@@ -39,136 +49,96 @@
 </head>
 
 <body>
+    <div id='gui'></div>
     <div id="mapid"></div>
-    <div id="plot" style="width:100%;height:95vh;"></div>
-    <section>
-        <button class="spacing" onclick="test()">Play</button>
-        <input id="target_clock" type="number" min="10" max="2000" placeholder="readings" value="100">
-        <input id="guess_clock" type="number" min="10" max="2000" placeholder="guessing" value="1000">
-        <span id="time"></span>
-        <input id="slider" class="slider" type="range" min="0" max="100" value="0">
-    </section>
     <script>
-        // const mymap = L.map('mapid').setView([50.44939187220999, 30.451736680294598], 14.5);
-        // L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiamFja3Jvc3MiLCJhIjoiY2tvdTdla2xzMDQwZjJub2IweXJhajc2MCJ9.BBNjH9bJ0U32S-r777oCLQ', {
-        //     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        //     maxZoom: 18,
-        //     id: 'mapbox/streets-v11',
-        //     tileSize: 512,
-        //     zoomOffset: -1,
-        //     accessToken: 'your.mapbox.access.token'
-        // }).addTo(mymap);
+        window.map = new Plot('mapid');
 
-        // const marker = L.marker([50.45, 30.45]).addTo(mymap);
-
-    
-
-        (async () => {
-            await testfuk2();
-        })();
-
-        const trace_path = {
-            type: 'scattermapbox',
-            mode: 'markers+lines',
-            name: 'path',
-            marker: {
-                color: 'blue',
-                size: 12,
-            }
-        };
-        const trace_trackers = {
-            type: 'scattermapbox',
-            mode: 'markers+lines',
-            name: 'trackers',
-            marker: {
-                color: 'red',
-                size: 15,
-            }
-        };
-        const trace_target = {
-            type: 'scattermapbox',
-            mode: 'markers',
-            name: 'target',
-            marker: {
-                color: 'green',
-                size: 15,
-            }
-        };
-        const trace_guess = {
-            type: 'scattermapbox',
-            mode: 'markers+lines',
-            name: 'target_guess',
-            marker: {
-                color: 'purple',
-                size: 15,
-            }
-        };
-
-        const plot_data = [trace_path, trace_trackers, trace_target, trace_guess];
-        const plot_layout = {
-            showlegend: true,
-            margin: { l: 0, t: 0, b: 0, r: 0 },
-            mapbox: {
-                center: { 'lat': 0, 'lon': 0 },
-                style: 'open-street-map',
-                zoom: 1
-            }
+        const gui = new dat.GUI({ autoPlace: false });
+        document.getElementById('gui').appendChild(gui.domElement);
+        const gui_data = {
+            target_time: 100,
+            guess_time: 1000,
+            speed: 1,
         }
-        const plot_config = { responsive: true, displayModeBar: false }
 
-        plot = new Plot('plot', plot_data, plot_layout, plot_config);
+        gui.add(gui_data, 'target_time', 100, 2000, 10);
+        gui.add(gui_data, 'guess_time', 100, 2000, 10);
+        gui.add(gui_data, 'speed', 0.25, 4, 0.25);
+        
 
-        const slider = document.getElementById("slider");
-        const output = document.getElementById("time");
-        output.innerHTML = slider.value;
+        const play_button = gui.add({ play: false }, 'play');
+        play_button.onChange(function (value) {
+            play_stop(value);
+        });
 
-        slider.oninput = function () {
-            output.innerHTML = parseFloat(this.value).toFixed(1);
-        };
+        gui.add({ reset: reset }, 'reset');
 
-        let t1 = null, t2 = null;
 
-        test = () => {
-            if (t1 === null || t2 == null) {
-                t = document.getElementById("target_clock").value;
-                g = document.getElementById("guess_clock").value;
-                t1 = setInterval(() => wrap_type('target'), t);
-                t2 = setInterval(() => wrap_type('guess'), g);
+        const hide_path = gui.add({ hide_path: false }, 'hide_path');
+        hide_path.onChange(function (value) {
+            map.hide_path(value);
+        });
+
+        let time1 = 0, time2 = 0;
+        let intr1 = null, intr2 = null;
+        function play_stop(state) {
+            if (state) {
+                intr1 = setInterval(() => {
+                    time1 += gui_data.target_time * gui_data.speed;
+                    wrap_type_data('target', { time: time1 / 1000 });
+                }, gui_data.target_time);
+
+                intr2 = setInterval(() => {
+                    time2 += gui_data.guess_time * gui_data.speed;
+                    wrap_type_data('guess', { time: time2 / 1000 });
+                }, gui_data.guess_time);
             }
             else {
-                clearInterval(t1);
-                clearInterval(t2);
-                t1 = null;
-                t2 = null;
+                clearInterval(intr1);
+                clearInterval(intr2);
             }
         }
 
-        function wrap_type(type) {
+        function reset() {
+            clearInterval(intr1);
+            clearInterval(intr2);
+            time1 = 0.0001;
+            time2 = 0.0001;
+            wrap_type_data('target', { time: time1 });
+            wrap_type_data('guess', { time: time2 });
+        }
+
+
+        // function play_stop() {
+        //     state = !state;
+        //     (async () => {
+        //         await inf_wrap(() => wrap_type('target'), gui_data.target_time);
+        //         console.log("aaaaaaaaaa");
+        //         await inf_wrap(() => wrap_type('guess'), gui_data.guess_time);
+        //     })();
+        // }
+        // function sleep(ms) {
+        //     return new Promise(resolve => setTimeout(resolve, ms));
+        // }
+        // async function inf_wrap(func, time) {
+        //     while (state) {
+        //         func();
+        //         await sleep(time);
+        //     }
+        // }
+
+        function wrap_type_data(type, data) {
             message = {
                 'type': type,
+                'data': data,
             };
+
             send_socket(JSON.stringify(message));
         }
 
-        async function testfuk() {
-            while (true) {
-                const lat = 50.45 + (Math.random() * (0.01 - 0.001) + 0.001);
-                const lon = 30.45 + (Math.random() * (0.01 - 0.001) + 0.001);
-                marker.setLatLng([lat, lon]).update();
-                await new Promise(r => setTimeout(r, 10));
-            }
-        }
-
-        async function testfuk2() {
-            while (true) {
-                const lat = 50.45 + (Math.random() * (0.01 - 0.001) + 0.001);
-                const lon = 30.45 + (Math.random() * (0.01 - 0.001) + 0.001);
-                marker.setLatLng([lat, lon]).update();
-                await new Promise(r => setTimeout(r, 10));
-            }
-        }
-
     </script>
+
 </body>
 
 </html>
