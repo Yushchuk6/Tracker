@@ -17,7 +17,6 @@ from model.filters.kalmam import kalman
 
 
 async def consumer_handler(websocket, path):
-    print('aaaa')
     async for message in websocket:
         message = json.loads(message)
         _type = message['type']
@@ -37,7 +36,6 @@ async def producer_handler(websocket, path):
     await websocket.send(message)
     
     message = controller.get_trackers_json()
-    print(message)
     await websocket.send(message)
 
     # asyncio.create_task(inf_wrap(websocket, controller.get_target, 0.2))
@@ -48,7 +46,6 @@ async def producer_handler(websocket, path):
 
 
 async def handler(websocket, path):
-    print('aaaa')
     consumer_task = asyncio.ensure_future(
         consumer_handler(websocket, path))
     producer_task = asyncio.ensure_future(
