@@ -11,7 +11,7 @@ socket.onclose = function (e) {
 socket.onmessage = function (event) {
     const command = JSON.parse(event.data);
     const data = command.data
-
+    
     switch (command.type) {
         case 'message':
             console.log(`[message]: ${data}`);
@@ -20,9 +20,9 @@ socket.onmessage = function (event) {
             map.update_path(data);
             console.log(`[update] path updated`);
             break;
-        case 'trakers':
+        case 'trackers':
             map.update_trackers(data);
-            console.log(`[update] trakers updated`);
+            console.log(`[update] trackers updated`);
             break;
         case 'target':
             map.update_target(data);
