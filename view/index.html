@@ -56,16 +56,16 @@
 
         const gui = new dat.GUI({ autoPlace: false });
         document.getElementById('gui').appendChild(gui.domElement);
+
         const gui_data = {
             target_time: 100,
             guess_time: 1000,
             speed: 1,
-        }
+        };
 
         gui.add(gui_data, 'target_time', 100, 2000, 10);
         gui.add(gui_data, 'guess_time', 100, 2000, 10);
         gui.add(gui_data, 'speed', 0.25, 4, 0.25);
-        
 
         const play_button = gui.add({ play: false }, 'play');
         play_button.onChange(function (value) {
@@ -136,9 +136,7 @@
 
             send_socket(JSON.stringify(message));
         }
-
     </script>
-
 </body>
 
 </html>

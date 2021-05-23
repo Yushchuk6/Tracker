@@ -11,7 +11,7 @@ socket.onclose = function (e) {
 socket.onmessage = function (event) {
     const command = JSON.parse(event.data);
     const data = command.data
-    
+
     switch (command.type) {
         case 'message':
             console.log(`[message]: ${data}`);
@@ -40,10 +40,4 @@ socket.onmessage = function (event) {
 
 function send_socket(message) {
     socket.send(message)
-}
-
-function set_list_attributes(html_el, attr) {
-    for (const [key, value] of Object.entries(attr)) {
-        html_el.setAttribute(key, value);
-    }
 }

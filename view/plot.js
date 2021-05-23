@@ -14,6 +14,22 @@ const purpleIcon = L.icon({
     popupAnchor: [0, -20]
 });
 
+const blueIcon = L.icon({
+    iconUrl: 'icons\\circle_blue.png',
+
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+    popupAnchor: [0, -15]
+});
+
+const redIcon = L.icon({
+    iconUrl: 'icons\\circle_red.png',
+
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+    popupAnchor: [0, -15]
+});
+
 const trackersStyle = {
     color: 'red',
     fillColor: 'rgba(0,0,0,0)',
@@ -40,18 +56,30 @@ class Plot {
         }).addTo(this.map);
 
         this.path = L.polyline([], pathStyle).addTo(this.map);
+        this.path_list = [];
         this.trackers = L.polygon([], trackersStyle).addTo(this.map);
-        this.target = L.marker([0, 0], { icon: greenIcon }).addTo(this.map);
-        this.target_guess = L.marker([0, 0], { icon: purpleIcon }).addTo(this.map);
+        this.trackers_list = [];
+        this.target = L.marker([0, 0], { icon: greenIcon, zIndexOffset: 10 }).addTo(this.map);
+        this.target_guess = L.marker([0, 0], { icon: purpleIcon, zIndexOffset:11 }).addTo(this.map);
     }
 
     update_path(update) {
         this.path.setLatLngs(update['latlon']);
+        update['latlon'].forEach(e => {
+            const marker = L.marker(e, {icon: blueIcon}).addTo(this.map);
+            marker.bindPopup(`Path<br>${marker.getLatLng()}`);
+            this.path_list.push(marker);
+        });
         this.map.fitBounds(this.path.getBounds());
     }
 
     update_trackers(update) {
         this.trackers.setLatLngs(update['latlon']);
+        update['latlon'].forEach(e => {
+            const marker = L.marker(e, {icon: redIcon}).addTo(this.map);
+            marker.bindPopup(`Tracker<br>${marker.getLatLng()}`);
+            this.trackers_list.push(marker);
+        });
     }
 
     update_target(update) {
