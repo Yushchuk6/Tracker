@@ -6,7 +6,7 @@ import pandas as pd
 from controller.controller import SimulatorController
 from model.simulator import Simulator, err_gen_norm
 from model.filters.ewma import ewm
-from model.filters.kalmam import kalman
+from model.filters.kalman import kalman
 
 
 # async def inf_wrap(websocket, func, interval):

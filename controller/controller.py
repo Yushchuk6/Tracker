@@ -1,6 +1,5 @@
 import json
 
-from model.simulator import Simulator
 
 res = {
     'type': None,
