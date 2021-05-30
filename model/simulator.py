@@ -8,7 +8,7 @@ def err_gen_norm():
     return np.random.normal(0, 1)
 
 class Simulator:
-    def __init__(self, path_df, trackers_df, f_error, f_filter):
+    def __init__(self, path_df, trackers_df, f_error, f_filter, accuracy):
         self.path = path_df
         self.target = Target(path_df.to_numpy())
 
@@ -16,7 +16,7 @@ class Simulator:
             f_error, t[0], t[1], t[2]), trackers_df.to_numpy()
         ))
 
-        self.pos = Positioning(self.tracker_list, f_filter, 5)
+        self.pos = Positioning(self.tracker_list, f_filter, accuracy)
 
     def get_path(self):
         lat = self.path['latitude'].to_list()
@@ -34,7 +34,7 @@ class Simulator:
     def get_target(self, time):
         latlon = self.target.get_latlon_by_time(time)
 
-        self.pos.add_target_pos(latlon)
+        self.pos._add_target_pos(latlon)
 
         return latlon.latlon
 

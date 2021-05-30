@@ -21,10 +21,4 @@ class Target:
                 t += s[i].total_time
             else:
                 return s[i].get_latlon_by_time(time - t)
-        return LatLon(0, 0, 0)
-
-    def get_total_time(self):
-        time = 0
-        for s in self.segments:
-            time += s.total_time
-        return time
+        return s[1].get_latlon_by_time(0)

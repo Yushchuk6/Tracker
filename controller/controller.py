@@ -1,5 +1,6 @@
 import json
 
+from model.simulator import Simulator
 
 res = {
     'type': None,
@@ -8,7 +9,7 @@ res = {
 
 
 class SimulatorController:
-    def __init__(self, model):
+    def __init__(self, model: Simulator):
         self.model = model
 
     def get_path_json(self):

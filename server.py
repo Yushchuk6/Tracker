@@ -31,7 +31,6 @@ async def consumer_handler(websocket, path):
 
 
 async def producer_handler(websocket, path):
-    
     message = controller.get_path_json()
     await websocket.send(message)
     
@@ -57,7 +56,7 @@ if __name__ == '__main__':
     path_df = pd.read_csv('model\\data\\path.csv')
     trackers_df = pd.read_csv('model\\data\\trackers_medium.csv')
 
-    model = Simulator(path_df, trackers_df, err_gen_norm, kalman)
+    model = Simulator(path_df, trackers_df, err_gen_norm, kalman, 5)
     controller = SimulatorController(model)
 
     loop = asyncio.get_event_loop()
