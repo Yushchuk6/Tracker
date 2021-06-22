@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+    <script src="plot.js"></script>
+    <script src="websocket.js"></script>
+    <title>Tracker</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #mapid {
+            width: 100%;
+            height: 100vh;
+        }
+
+        #gui {
+            position: absolute;
+            z-index: 1000;
+            right: 0px;
+        }
+
+        .dg.main {
+            margin: 0;
+        }
+
+        section {
+            display: flex;
+            align-items: center;
+            height: 5vh;
+        }
+
+        section * {
+            margin: 10px;
+        }
+
+        .slider {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='gui'></div>
+    <div id="mapid"></div>
+    <script>
+        window.map = new Plot('mapid');
+
+        const gui = new dat.GUI({ autoPlace: false });
+        document.getElementById('gui').appendChild(gui.domElement);
+
+        const gui_data = {
+            target_time: 100,
+            guess_time: 1000,
+            speed: 1,
+        };
+
+        gui.add(gui_data, 'target_time', 100, 2000, 10);
+        gui.add(gui_data, 'guess_time', 100, 2000, 10);
+        gui.add(gui_data, 'speed', 0.25, 4, 0.25);
+
+        const play_button = gui.add({ play: false }, 'play');
+        play_button.onChange(function (value) {
+            play_stop(value);
+        });
+
+        gui.add({ reset: reset }, 'reset');
+
+
+        const hide_path = gui.add({ hide_path: false }, 'hide_path');
+        hide_path.onChange(function (value) {
+            map.hide_path(value);
+        });
+
+        let time1 = 0, time2 = 0;
+        let intr1 = null, intr2 = null;
+        function play_stop(state) {
+            if (state) {
+                intr1 = setInterval(() => {
+                    time1 += gui_data.target_time * gui_data.speed;
+                    wrap_type_data('target', { time: time1 / 1000 });
+                }, gui_data.target_time);
+
+                intr2 = setInterval(() => {
+                    time2 += gui_data.guess_time * gui_data.speed;
+                    wrap_type_data('guess', { time: time2 / 1000 });
+                }, gui_data.guess_time);
+            }
+            else {
+                clearInterval(intr1);
+                clearInterval(intr2);
+            }
+        }
+
+        function reset() {
+            clearInterval(intr1);
+            clearInterval(intr2);
+            time1 = 0;
+            time2 = 0;
+            wrap_type_data('target', { time: time1 });
+            wrap_type_data('guess', { time: time2 });
+        }
+
+
+        // function play_stop() {
+        //     state = !state;
+        //     (async () => {
+        //         await inf_wrap(() => wrap_type('target'), gui_data.target_time);
+        //         console.log("aaaaaaaaaa");
+        //         await inf_wrap(() => wrap_type('guess'), gui_data.guess_time);
+        //     })();
+        // }
+        // function sleep(ms) {
+        //     return new Promise(resolve => setTimeout(resolve, ms));
+        // }
+        // async function inf_wrap(func, time) {
+        //     while (state) {
+        //         func();
+        //         await sleep(time);
+        //     }
+        // }
+
+        function wrap_type_data(type, data) {
+            message = {
+                'type': type,
+                'data': data,
+            };
+
+            send_socket(JSON.stringify(message));
+        }
+    </script>
+</body>
+
+</html>

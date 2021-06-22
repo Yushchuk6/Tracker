@@ -1,0 +1,56 @@
+import asyncio
+import json
+import websockets
+import pandas as pd
+
+from controller.controller import SimulatorController
+from model.simulator import Simulator, err_gen_norm
+from model.filters.ewma import ewm
+from model.filters.kalman import kalman
+
+df = pd.DataFrame(columns=['target_lat', 'target_lon',
+                  'target_guess_lat', 'target_guess_lon'])
+
+
+async def consumer_handler(websocket, path):
+    async for message in websocket:
+        message = json.loads(message)
+        _type = message['type']
+        _data = message['data']
+
+        if _type == 'target':
+            message = controller.get_target_json(_data['time'])
+        elif _type == 'guess':
+            message = controller.get_target_guess_json(_data['time'])
+
+        await websocket.send(message)
+
+
+async def producer_handler(websocket, path):
+    message = controller.get_path_json()
+    await websocket.send(message)
+
+    message = controller.get_trackers_json()
+    await websocket.send(message)
+
+
+async def handler(websocket, path):
+    consumer_task = asyncio.ensure_future(
+        consumer_handler(websocket, path))
+    producer_task = asyncio.ensure_future(
+        producer_handler(websocket, path))
+
+    await asyncio.wait([consumer_task, producer_task])
+
+if __name__ == '__main__':
+    path_df = pd.read_csv('model\\data\\path.csv')
+    trackers_df = pd.read_csv('model\\data\\trackers_medium.csv')
+
+    model = Simulator(path_df, trackers_df, err_gen_norm, kalman, 5)
+    controller = SimulatorController(model)
+
+    loop = asyncio.get_event_loop()
+
+    start_server = websockets.serve(handler, 'localhost', 8080)
+    loop.run_until_complete(start_server)
+    loop.run_forever()
