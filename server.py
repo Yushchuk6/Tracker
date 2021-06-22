@@ -8,12 +8,8 @@ from model.simulator import Simulator, err_gen_norm
 from model.filters.ewma import ewm
 from model.filters.kalman import kalman
 
-
-# async def inf_wrap(websocket, func, interval):
-#     while True:
-#         message = func()
-#         await websocket.send(message)
-#         await asyncio.sleep(interval)
+df = pd.DataFrame(columns=['target_lat', 'target_lon',
+                  'target_guess_lat', 'target_guess_lon'])
 
 
 async def consumer_handler(websocket, path):
@@ -33,15 +29,9 @@ async def consumer_handler(websocket, path):
 async def producer_handler(websocket, path):
     message = controller.get_path_json()
     await websocket.send(message)
-    
+
     message = controller.get_trackers_json()
     await websocket.send(message)
-
-    # asyncio.create_task(inf_wrap(websocket, controller.get_target, 0.2))
-    # asyncio.create_task(inf_wrap(websocket, controller.get_target_guess, 1))
-
-    # pending = asyncio.all_tasks()
-    # await asyncio.gather(*pending)
 
 
 async def handler(websocket, path):
